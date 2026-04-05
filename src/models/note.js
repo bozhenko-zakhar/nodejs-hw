@@ -13,8 +13,8 @@ const noteSchema = new Schema(
     },
     tag: {
       type: String,
-      required: true,
       enum: ["Work", "Personal", "Meeting", "Shopping", "Ideas", "Travel", "Finance", "Health", "Important", "Todo"],
+      default: "Todo",
     },
   },
   {
