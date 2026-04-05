@@ -1,60 +1,28 @@
 import express from "express";
 import cors from 'cors';
-import pino from 'pino-http';
 import 'dotenv/config';
+import { connectMongoDB } from "./db/connectMongoDB";
+import { logger } from "./middleware/logger";
+import { errorHandler } from "./middleware/errorHandler";
+import { notFoundHandler } from "./middleware/notFoundHandler";
+import notesRoutes from "./routes/notesRoutes";
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
 
+app.use(logger);
 app.use(express.json());
 app.use(cors());
-app.use(
-  pino({
-    level: 'info',
-    transport: {
-      target: 'pino-pretty',
-      options: {
-        colorize: true,
-        translateTime: 'HH:MM:ss',
-        ignore: 'pid,hostname',
-        messageFormat: '{req.method} {req.url} {res.statusCode} - {responseTime}ms',
-        hideObject: true,
-      },
-    },
-  }),
-);
 
 // Routers methods
-app.get("/notes", (req, res) => {
-  res.status(200).json({
-    message: "Retrieved all notes"
-  });
-});
+app.use(notesRoutes);
 
-app.get("/notes/:noteId", (req, res) => {
-  const id_param = req.params.noteId;
-  res.status(200).json({
-    message: "Retrieved note with ID: " + id_param
-  });
-});
+// 404 & Error Middlewares
+app.use(notFoundHandler);
 
-app.get("/test-error", () => {
-  throw new Error("Something went wrong");
-});
+app.use(errorHandler);
 
-
-// Middlewares
-app.use((req, res) => {
-  res.status(404).json({
-    message: "Page not found"
-  });
-});
-
-app.use((err, req, res, next) => {
-  res.status(500).json({
-    error: err.message
-  });
-});
+await connectMongoDB();
 
 // Server launching
 app.listen(PORT, () => {
