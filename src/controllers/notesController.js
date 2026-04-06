@@ -2,7 +2,20 @@ import { Note } from "../models/note.js";
 import createHttpError from 'http-errors';
 
 export const getAllNotes = async (req, res) => {
-  const notes = await Note.find();
+  const { search, tag } = req.query;
+
+  const notesQuery = Note.find();
+
+  if (search) {
+    notesQuery.where({ $text: { $search: search }});
+  }
+
+  if (tag) {
+    notesQuery.where("tag").equals(tag);
+  }
+
+  const notes = await notesQuery;
+
   res.status(200).json(notes);
 };
 
